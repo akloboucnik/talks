@@ -1,0 +1,319 @@
+<!doctype html>
+<html lang="en">
+
+    <head>
+        <meta charset="utf-8">
+
+        <title>Functional Reactive Programming</title>
+
+        <meta name="description" content="">
+        <meta name="author" content="Adam Kloboucnik">
+
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+
+        <link rel="stylesheet" href="css/reveal.css">
+        <link rel="stylesheet" href="css/theme/solarized.css" id="theme">
+
+        <!-- Code syntax highlighting -->
+        <link rel="stylesheet" href="lib/css/zenburn.css">
+
+        <!-- Printing and PDF exports -->
+        <script>
+            var link = document.createElement( 'link' );
+            link.rel = 'stylesheet';
+            link.type = 'text/css';
+            link.href = window.location.search.match( /print-pdf/gi ) ? 'css/print/pdf.css' : 'css/print/paper.css';
+            document.getElementsByTagName( 'head' )[0].appendChild( link );
+        </script>
+
+        <!--[if lt IE 9]>
+        <script src="lib/js/html5shiv.js"></script>
+        <![endif]-->
+    </head>
+
+    <body>
+
+        <div class="reveal">
+
+            <!-- Any section element inside of this container is displayed as a slide -->
+            <div class="slides">
+                <section>
+                    <h1>Functional Reactive Programming</h1>
+                    <h3>with Kefir.js</h3>
+                </section>
+
+                <section>
+                    <p style="font-size:1.5em;">
+                        <em>Functional reactive programming (FRP) is a programming paradigm for reactive programming using the building blocks of functional programming.</em>
+                    </p>
+                </section>
+
+                <section>
+                    <img src="meme.jpg"/>
+                </section>
+
+
+                <section>
+                    <h2>What?</h2>
+                    <section>
+                        <div class="fragment">
+                            <p style="font-size:0.8em;">Imagine a standard JS array and what you can do with it</p>
+                            <pre><code data-trim>
+[1, 2, 3]
+.filter(...)
+.map(...)
+.reduce(...);
+                            </code></pre>
+                        </div>
+                        <div class="fragment">
+                            <p style="font-size:0.8em;">Now imagine a series of promises and how you need to deal with them</p>
+                            <pre><code data-trim>
+Promise.all([true, promise])
+       .then(function(values) {
+            return values // [true, 3]
+                    .filter(...)
+                    .map(...)
+                    .reduce(...);
+        });
+                            </code></pre>
+                        </div>
+                        <p class="fragment" style="font-size:0.8em;">what if these are generated continuously?</p>
+                    </section>
+                    <section>
+                        <p>Definitions gathered on the migthy internet</p>
+                        <ul class="fragment">
+                            <li><strong>flows</strong> <span class="fragment">of <strong>data</strong></span> <span class="fragment">manipulated by functions</span></li>
+                            <li class="fragment">for replacing callbacks / promises
+                                <ul>
+                                    <li class="fragment">something will happen in the future</li>
+                                    <li class="fragment">possibly several times</li>
+                                </ul>
+                            </li>
+                            <li class="fragment">way of hooking up <strong>stateless functions</strong> together with <strong>data</strong></li>
+                            <li class="fragment"><strong>composable</strong> <span class="fragment">- streams generate streams!</span></li>
+                        </ul>
+                    </section>
+                </section>
+
+                <section>
+                    <h2>Dictionary</h2>
+                    <section>
+                        <dl>
+                            <div class="fragment">
+                                <dt>stream</dt>
+                                <dd>“array” representing pipeline of events</dd>
+                            </div>
+                            <div class="fragment">
+                                <dt>property</dt>
+                                <dd>represents one value which can change over time</dd>
+                            </div>
+                            <div class="fragment">
+                                <dt>transformation</dt>
+                                <dd>
+                                    function describing how to get stream from other stream<br />
+                                    <span class="fragment">(<code>debounce</code>, <code>throttle</code>, <code>sliding window</code>, <code>map</code>, <code>flatMap</code>...)</span>
+                                </dd>
+                            </div>
+                        </dl>
+                    </section>
+                    <section>
+                        <img src="stream-and-property.png" />
+                    </section>
+
+                </section>
+
+                <section>
+                    <h2>Implementations</h2>
+                    <ul>
+                        <li>RxJS</li>
+                        <li>Bacon.js</li>
+                        <li><strong>Kefir.js</strong></li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h2>101</h2>
+                    <section>
+                        <pre><code data-trim>
+var stream =
+// lets create a stream
+Kefir.fromPoll(
+  1000,
+  function(){ return new Date().toTimeString()
+})
+
+// on each emited value assign it to some element
+.onValue(function(v) { $('#time-tag').html(v); });
+                        </code></pre>
+
+                        <pre class="fragment"><code data-trim class="javascript">
+// stream timeline visualization:
+stream:  ------10:51:00---------10:51:01------10:51:02----
+time:    ---------1s---------------2s------------3s-------
+
+// we have a clock!!!
+                        </code></pre>
+                        <a href="http://jsbin.com/pevara/2/edit?js,console,output">JSBin</a>
+                    </section>
+                    <section>
+                        <pre><code data-trim>
+&lt;button id="b1"&gt;+1&lt;/button&gt;
+                        </code></pre>
+
+                        <pre><code data-trim>
+// create stream
+var clicks = $('#b1').asKefirStream('click')
+
+// transform it
+.map(function(e) { return e.target.textContent; })
+
+// add some logging
+.log('from click stream');
+                        </code></pre>
+                        <a href="http://jsbin.com/pofago/1/edit?js,console,output">JSBin</a>
+                    </section>
+                    <section>
+                        <pre><code data-trim>
+&lt;button id="b1"&gt;+1&lt;/button&gt;
+&lt;button id="b2"&gt;-1&lt;/button&gt;
+                        </code></pre>
+
+                        <pre><code data-trim>
+var clicks = $('#b1, #b2').asKefirStream('click')
+var parsedClicks = clicks
+    .map(function(e) { return parseInt(e.target.textContent, 10); })
+    .log('from click stream');
+
+// let's transform again
+parsedClicks.scan(function(l, r) { return l+r }, 0).log('from scan');
+
+// stream timeline visualization:
+clicks:        ------"+1"---------"+1"--"-1"----
+parsedClicks:  --------1------------1---(-1)----
+after .scan:   0-------1------------2-----1-----
+
+                        </code></pre>
+                        <a href="http://jsbin.com/nunova/4/edit?js,console,output">JSBin</a>
+                    </section>
+                </section>
+                <section>
+                    <section>
+                        <h2>General usage pattern</h2>
+                        <ul>
+                            <li>Create a stream / property</li>
+                            <li>Observe changes</li>
+                            <li>Modify it / combine more</li>
+                        </ul>
+                    </section>
+                    <section>
+                        <h3>Create a stream</h3>
+                        <pre><code data-trim>
+// stream from jQuery events using plugin
+var clicks = $('#b1').asKefirStream('click')
+
+// stream from poll
+var start = new Date();
+var stream = Kefir.fromPoll(1000, function(){ return new Date() - start });
+
+// property from promise
+var myPromise = {
+  then: function(onSuccess, onError) {
+    var fulfill = function() {  onSuccess(1)  };
+    setTimeout(fulfill, 1000);
+  }
+};
+
+var result = Kefir.fromPromise(myPromise);
+                        </code></pre>
+                        <p>
+                            <code>Kefir.stream, sequentially, fromCallback, fromPromise...</code><br/>
+                            <a href="https://pozadi.github.io/kefir/#create-stream">Doc</a>
+                        </p>
+                    </section>
+                    <section>
+                        <h3>Observe changes</h3>
+                        <pre><code data-trim>
+var stream = Kefir.from...;
+
+function processValueFromStream() { ... };
+stream.onValue(processValueFromStream).onError(...).onEnd(...).log();
+                        </code></pre>
+                        <p>
+                            <code>[on|off][Value|Error|End|Any|log]</code><br/>
+                            <a href="https://pozadi.github.io/kefir/#main-methods">Doc</a>
+                        </p>
+                    </section>
+                    <section>
+                        <h3>Modify it / combine more</h3>
+                        <pre><code class="javascript" data-trim>
+// e.g. scan from previous example
+clicks.scan(function(l, r) { return l+r }, 0);
+
+// or something more complex as flatMapConcat
+var source = Kefir.sequentially(100, [1, 2]);
+var result = source.flatMapConcat(function(x) {
+  return Kefir.interval(40, x).take(4);
+});
+                        </code></pre>
+                        <pre>
+// which translates to:
+source:      -------1---------2X
+spawned 1:          ---1---1---1---1X
+spawned 2:                          ---2---2---2---2X
+result:      ----------1---1---1---1---2---2---2---2X
+                        </pre>
+                        <p>
+                            <code>combine, zip, merge, concat...</code><br/>
+                            <a href="https://pozadi.github.io/kefir/#combine-observables">Doc</a>
+                        </p>
+                    </section>
+                </section>
+                <section>
+                    <h2>Usage</h2>
+                    <ul>
+                        <li>Ordering of async actions - <a href="https://github.com/gooddata/gdc-indigo-reporter/compare/akl-kefir-test">my test in AD</a></li>
+                        <li>Synchonization of multiple values changing in time <br/>(e.g. <em>I want to poll backend if I'm not editing stuff</em></li>
+                        <li>???</li>
+                    </ul>
+                </section>
+                <section>
+                    <h1>Q&A?</h1>
+                    <h2 class="fragment">Thx!</h2>
+                </section>
+            </div>
+
+        </div>
+
+        <script src="lib/js/head.min.js"></script>
+        <script src="js/reveal.js"></script>
+
+        <script>
+
+            // Full list of configuration options available at:
+            // https://github.com/hakimel/reveal.js#configuration
+            Reveal.initialize({
+                controls: true,
+                progress: true,
+                history: true,
+                center: true,
+
+                transition: 'slide', // none/fade/slide/convex/concave/zoom
+
+                // Optional reveal.js plugins
+                dependencies: [
+                    { src: 'lib/js/classList.js', condition: function() { return !document.body.classList; } },
+                    { src: 'plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+                    { src: 'plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+                    { src: 'plugin/highlight/highlight.js', async: true, condition: function() { return !!document.querySelector( 'pre code' ); }, callback: function() { hljs.initHighlightingOnLoad(); } },
+                    { src: 'plugin/zoom-js/zoom.js', async: true },
+                    { src: 'plugin/notes/notes.js', async: true }
+                ]
+            });
+
+        </script>
+
+    </body>
+</html>
